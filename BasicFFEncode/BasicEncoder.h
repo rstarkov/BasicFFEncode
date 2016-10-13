@@ -1,6 +1,7 @@
 #pragma once
 #include "Helpers.h"
 #include "Frames.h"
+#include "BasicEncoderSettings.h"
 
 using namespace System;
 using namespace System::Collections::Generic;
@@ -21,7 +22,7 @@ namespace BasicFFEncode
         static void Initialise();
 
     public:
-        BasicEncoder(String^ filename, Dictionary<String^, String^>^ options);
+        BasicEncoder(String^ filename, BasicEncoderSettings^ settings);
         ~BasicEncoder();
         void EncodeFrame(BasicVideoFrame^ frame, Int64 presentationTimestamp);
     };

@@ -145,6 +145,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BasicEncoder.h" />
+    <ClInclude Include="BasicEncoderSettings.h" />
     <ClInclude Include="Frames.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Stdafx.h" />
@@ -152,6 +153,7 @@
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="BasicEncoder.cpp" />
+    <ClCompile Include="BasicEncoderSettings.cpp" />
     <ClCompile Include="Frames.cpp" />
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="Stdafx.cpp">

@@ -5,6 +5,7 @@
     <ClInclude Include="BasicEncoder.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Frames.h" />
+    <ClInclude Include="BasicEncoderSettings.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
@@ -12,5 +13,6 @@
     <ClCompile Include="BasicEncoder.cpp" />
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="Frames.cpp" />
+    <ClCompile Include="BasicEncoderSettings.cpp" />
   </ItemGroup>
 </Project>

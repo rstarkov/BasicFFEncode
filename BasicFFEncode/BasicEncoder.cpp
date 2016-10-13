@@ -98,19 +98,20 @@ void openCodec(AVCodec* codec, AVCodecContext* context, AVStream* stream, AVDict
         throw gcnew Exception("Could not copy parameters from context");
 }
 
-BasicFFEncode::BasicEncoder::BasicEncoder(String^ filename, Dictionary<String^, String^>^ options)
+BasicFFEncode::BasicEncoder::BasicEncoder(String^ filename, BasicEncoderSettings^ settings)
 {
     Initialise();
     _filename = filename;
     _priv = new UnmanagedPrivates(filename);
 
     AVDictionary* opts = NULL;
-    for each (auto kvp in options)
-    {
-        StringWrapper swKey(kvp.Key);
-        StringWrapper swValue(kvp.Value);
-        av_dict_set(&opts, swKey.StrPtr, swValue.StrPtr, 0); // this duplicates the strings, so they can be deallocated immediately
-    }
+    if (settings->Options)
+        for each (auto kvp in settings->Options)
+        {
+            StringWrapper swKey(kvp.Key);
+            StringWrapper swValue(kvp.Value);
+            av_dict_set(&opts, swKey.StrPtr, swValue.StrPtr, 0); // this duplicates the strings, so they can be deallocated immediately
+        }
 
     try
     {
@@ -141,25 +142,22 @@ BasicFFEncode::BasicEncoder::BasicEncoder(String^ filename, Dictionary<String^, 
         {
             // Configure video encoding
             _priv->pVideoContext->codec_id = videoCodecId;
-            _priv->pVideoContext->bit_rate = 400000;
-            _priv->pVideoContext->width = 352; // must be a multiple of 2
-            _priv->pVideoContext->height = 288;
-            // timebase: This is the fundamental unit of time (in seconds) in terms of which frame timestamps are represented. For fixed-fps content,
-            // timebase should be 1/framerate and timestamp increments should be equal to 1.
-            _priv->pVideoStream->time_base.num = 1;
-            _priv->pVideoStream->time_base.den = 25; // 25 FPS
+            _priv->pVideoContext->bit_rate = settings->VideoBitrate;
+            _priv->pVideoContext->width = settings->VideoWidth;
+            _priv->pVideoContext->height = settings->VideoHeight;
+            _priv->pVideoStream->time_base.num = settings->VideoTimebaseNum;
+            _priv->pVideoStream->time_base.den = settings->VideoTimebaseDen;
             _priv->pVideoContext->time_base = _priv->pVideoStream->time_base;
-            _priv->pVideoContext->gop_size = 12; // emit one intra frame every twelve frames at most
-            _priv->pVideoContext->pix_fmt = AV_PIX_FMT_YUV420P;
-            if (_priv->pVideoContext->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
-                // just for testing, we also add B-frames
-                _priv->pVideoContext->max_b_frames = 2;
-            }
-            if (_priv->pVideoContext->codec_id == AV_CODEC_ID_MPEG1VIDEO) {
-                // Needed to avoid using macroblocks in which some coeffs overflow. This does not happen with normal video, it just happens here as
-                // the motion of the chroma plane does not match the luma plane.
-                _priv->pVideoContext->mb_decision = 2;
-            }
+            _priv->pVideoContext->gop_size = settings->VideoGopSize;
+            _priv->pVideoContext->pix_fmt = static_cast<AVPixelFormat>(settings->PixelFormat);
+
+            // The following settings are from the muxing.c sample and should not be required in general:
+            //if (_priv->pVideoContext->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
+            //    _priv->pVideoContext->max_b_frames = 2;
+            //}
+            //if (_priv->pVideoContext->codec_id == AV_CODEC_ID_MPEG1VIDEO) {
+            //    _priv->pVideoContext->mb_decision = 2;
+            //}
 
             // Open video codec
             openCodec(_priv->pVideoCodec, _priv->pVideoContext, _priv->pVideoStream, opts);
@@ -169,13 +167,14 @@ BasicFFEncode::BasicEncoder::BasicEncoder(String^ filename, Dictionary<String^, 
         {
             // Configure audio encoding
             _priv->pAudioContext->sample_fmt = _priv->pAudioCodec->sample_fmts ? _priv->pAudioCodec->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
-            _priv->pAudioContext->bit_rate = 64000;
-            _priv->pAudioContext->sample_rate = 44100;
+            _priv->pAudioContext->bit_rate = settings->AudioBitrate;
+            _priv->pAudioContext->sample_rate = settings->AudioSampleRate;
             if (_priv->pAudioCodec->supported_samplerates) {
                 _priv->pAudioContext->sample_rate = _priv->pAudioCodec->supported_samplerates[0];
                 for (int i = 0; _priv->pAudioCodec->supported_samplerates[i]; i++)
-                    if (_priv->pAudioCodec->supported_samplerates[i] == 44100)
-                        _priv->pAudioContext->sample_rate = 44100;
+                    if (_priv->pAudioCodec->supported_samplerates[i] == settings->AudioSampleRate)
+                        _priv->pAudioContext->sample_rate = settings->AudioSampleRate;
+                settings->AudioSampleRate = _priv->pAudioContext->sample_rate;
             }
             //_priv->pAudioContext->channels = av_get_channel_layout_nb_channels(_priv->pAudioContext->channel_layout); // was in the sample - not needed here?
             _priv->pAudioContext->channel_layout = AV_CH_LAYOUT_STEREO;
