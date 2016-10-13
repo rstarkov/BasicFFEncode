@@ -1,13 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="BasicFFEncode.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="Stdafx.h" />
+    <ClInclude Include="BasicEncoder.h" />
+    <ClInclude Include="Helpers.h" />
+    <ClInclude Include="Frames.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="BasicFFEncode.cpp" />
     <ClCompile Include="Stdafx.cpp" />
+    <ClCompile Include="BasicEncoder.cpp" />
+    <ClCompile Include="Helpers.cpp" />
+    <ClCompile Include="Frames.cpp" />
   </ItemGroup>
 </Project>
