@@ -6,6 +6,20 @@ extern "C"
 
 namespace BasicFFEncode
 {
+    enum class BasicPixelFormat;
+
+    public ref class BasicVideoFrame
+    {
+    internal:
+        AVFrame* pFrame;
+
+    public:
+        BasicVideoFrame(int width, int height, BasicPixelFormat pixelFormat);
+        ~BasicVideoFrame();
+        System::Byte* GetBuffer(int plane);
+        System::Int32 GetStride(int plane);
+    };
+
     public enum class BasicPixelFormat
     {
         YUV420P = AV_PIX_FMT_YUV420P,   ///< planar YUV 4:2:0, 12bpp, (1 Cr & Cb sample per 2x2 Y samples)
@@ -78,11 +92,11 @@ namespace BasicFFEncode
         BGR48BE = AV_PIX_FMT_BGR48BE,   ///< packed RGB 16:16:16, 48bpp, 16B, 16G, 16R, the 2-byte value for each R/G/B component is stored as big-endian
         BGR48LE = AV_PIX_FMT_BGR48LE,   ///< packed RGB 16:16:16, 48bpp, 16B, 16G, 16R, the 2-byte value for each R/G/B component is stored as little-endian
 
-                              /**
-                              * The following 12 formats have the disadvantage of needing 1 format for each bit depth.
-                              * Notice that each 9/10 bits sample is stored in 16 bits with extra padding.
-                              * If you want to support multiple bit depths, then using AV_PIX_FMT_YUV420P16* with the bpp stored separately is better.
-                              */
+        /**
+        * The following 12 formats have the disadvantage of needing 1 format for each bit depth.
+        * Notice that each 9/10 bits sample is stored in 16 bits with extra padding.
+        * If you want to support multiple bit depths, then using AV_PIX_FMT_YUV420P16* with the bpp stored separately is better.
+        */
         YUV420P9BE = AV_PIX_FMT_YUV420P9BE, ///< planar YUV 4:2:0, 13.5bpp, (1 Cr & Cb sample per 2x2 Y samples), big-endian
         YUV420P9LE = AV_PIX_FMT_YUV420P9LE, ///< planar YUV 4:2:0, 13.5bpp, (1 Cr & Cb sample per 2x2 Y samples), little-endian
         YUV420P10BE = AV_PIX_FMT_YUV420P10BE,///< planar YUV 4:2:0, 15bpp, (1 Cr & Cb sample per 2x2 Y samples), big-endian
@@ -198,17 +212,5 @@ namespace BasicFFEncode
 
         GBRAP10BE = AV_PIX_FMT_GBRAP10BE,  ///< planar GBR 4:4:4:4 40bpp, big-endian
         GBRAP10LE = AV_PIX_FMT_GBRAP10LE,  ///< planar GBR 4:4:4:4 40bpp, little-endian
-    };
-
-    public ref class BasicVideoFrame
-    {
-    internal:
-        AVFrame* pFrame;
-
-    public:
-        BasicVideoFrame(int width, int height, BasicPixelFormat pixelFormat);
-        ~BasicVideoFrame();
-        System::Byte* GetBuffer(int plane);
-        System::Int32 GetStride(int plane);
     };
 }
