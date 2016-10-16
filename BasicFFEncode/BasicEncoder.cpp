@@ -142,14 +142,18 @@ BasicFFEncode::BasicEncoder::BasicEncoder(String^ filename, BasicEncoderSettings
         {
             // Configure video encoding
             _priv->pVideoContext->codec_id = videoCodecId;
-            _priv->pVideoContext->bit_rate = settings->VideoBitrate;
-            _priv->pVideoContext->width = settings->VideoWidth;
-            _priv->pVideoContext->height = settings->VideoHeight;
-            _priv->pVideoStream->time_base.num = settings->VideoTimebaseNum;
-            _priv->pVideoStream->time_base.den = settings->VideoTimebaseDen;
-            _priv->pVideoContext->time_base = _priv->pVideoStream->time_base;
-            _priv->pVideoContext->gop_size = settings->VideoGopSize;
-            _priv->pVideoContext->pix_fmt = static_cast<AVPixelFormat>(settings->PixelFormat);
+            settings->Video->CodecId = static_cast<BasicVideoCodecId>(videoCodecId);
+            _priv->pVideoContext->bit_rate = settings->Video->Bitrate;
+            _priv->pVideoContext->width = settings->Video->Width;
+            _priv->pVideoContext->height = settings->Video->Height;
+            _priv->pVideoContext->time_base.num = settings->Video->Timebase.Num;
+            _priv->pVideoContext->time_base.den = settings->Video->Timebase.Den;
+            _priv->pVideoContext->pix_fmt = static_cast<AVPixelFormat>(settings->Video->PixelFormat);
+            _priv->pVideoContext->gop_size = settings->Video->GopSize;
+            _priv->pVideoContext->sample_aspect_ratio.num = settings->Video->PixelAspectRatio.Num;
+            _priv->pVideoContext->sample_aspect_ratio.den = settings->Video->PixelAspectRatio.Den;
+
+            _priv->pVideoStream->time_base = _priv->pVideoContext->time_base;
 
             // The following settings are from the muxing.c sample and should not be required in general:
             //if (_priv->pVideoContext->codec_id == AV_CODEC_ID_MPEG2VIDEO) {
@@ -166,15 +170,16 @@ BasicFFEncode::BasicEncoder::BasicEncoder(String^ filename, BasicEncoderSettings
         if (hasAudio)
         {
             // Configure audio encoding
+            settings->Audio->CodecId = static_cast<BasicAudioCodecId>(audioCodecId);
             _priv->pAudioContext->sample_fmt = _priv->pAudioCodec->sample_fmts ? _priv->pAudioCodec->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
-            _priv->pAudioContext->bit_rate = settings->AudioBitrate;
-            _priv->pAudioContext->sample_rate = settings->AudioSampleRate;
+            _priv->pAudioContext->bit_rate = settings->Audio->Bitrate;
+            _priv->pAudioContext->sample_rate = settings->Audio->SampleRate;
             if (_priv->pAudioCodec->supported_samplerates) {
                 _priv->pAudioContext->sample_rate = _priv->pAudioCodec->supported_samplerates[0];
                 for (int i = 0; _priv->pAudioCodec->supported_samplerates[i]; i++)
-                    if (_priv->pAudioCodec->supported_samplerates[i] == settings->AudioSampleRate)
-                        _priv->pAudioContext->sample_rate = settings->AudioSampleRate;
-                settings->AudioSampleRate = _priv->pAudioContext->sample_rate;
+                    if (_priv->pAudioCodec->supported_samplerates[i] == settings->Audio->SampleRate)
+                        _priv->pAudioContext->sample_rate = settings->Audio->SampleRate;
+                settings->Audio->SampleRate = _priv->pAudioContext->sample_rate;
             }
             //_priv->pAudioContext->channels = av_get_channel_layout_nb_channels(_priv->pAudioContext->channel_layout); // was in the sample - not needed here?
             _priv->pAudioContext->channel_layout = AV_CH_LAYOUT_STEREO;
@@ -185,11 +190,15 @@ BasicFFEncode::BasicEncoder::BasicEncoder(String^ filename, BasicEncoderSettings
                         _priv->pAudioContext->channel_layout = AV_CH_LAYOUT_STEREO;
             }
             _priv->pAudioContext->channels = av_get_channel_layout_nb_channels(_priv->pAudioContext->channel_layout);
+            settings->Audio->ChannelLayout = static_cast<BasicChannelLayout>(_priv->pAudioContext->channel_layout);
+            settings->Audio->Channels = _priv->pAudioContext->channels;
             _priv->pAudioStream->time_base.num = 1;
             _priv->pAudioStream->time_base.den = _priv->pAudioContext->sample_rate;
 
             // Open audio codec
             openCodec(_priv->pAudioCodec, _priv->pAudioContext, _priv->pAudioStream, opts);
+
+            settings->Audio->FrameSize = _priv->pAudioContext->codec->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE ? 0 : _priv->pAudioContext->frame_size;
         }
 
 
@@ -252,6 +261,16 @@ void BasicFFEncode::BasicEncoder::EncodeFrame(BasicVideoFrame^ frame, Int64 pres
     if (avcodec_send_frame(_priv->pVideoContext, frame->pFrame) < 0)
         throw gcnew Exception("Could not encode video frame.");
     writePendingPackets(_priv->pVideoContext, _priv->pVideoStream, _priv->pFormatContext);
+    // The codec may have kept a reference to this frame, making it un-writable. Allocate new buffers in this case to ensure the caller can still write to this frame.
+    av_frame_make_writable(frame->pFrame);
+}
+
+void BasicFFEncode::BasicEncoder::EncodeFrame(BasicAudioFrame^ frame, Int64 presentationTimestamp)
+{
+    frame->pFrame->pts = presentationTimestamp;
+    if (avcodec_send_frame(_priv->pAudioContext, frame->pFrame) < 0)
+        throw gcnew Exception("Could not encode audio frame.");
+    writePendingPackets(_priv->pAudioContext, _priv->pAudioStream, _priv->pFormatContext);
     // The codec may have kept a reference to this frame, making it un-writable. Allocate new buffers in this case to ensure the caller can still write to this frame.
     av_frame_make_writable(frame->pFrame);
 }

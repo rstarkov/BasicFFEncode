@@ -1,4 +1,5 @@
-﻿using BasicFFEncode;
+﻿using System;
+using BasicFFEncode;
 
 namespace Sample
 {
@@ -8,34 +9,58 @@ namespace Sample
         {
             var filename = args[0];
             var settings = new BasicEncoderSettings();
-            settings.VideoWidth = 1920;
-            settings.VideoHeight = 1080;
-            settings.VideoTimebaseDen = 60;
-            settings.VideoBitrate = 10000000;
-            using (var frame = new BasicVideoFrame(settings.VideoWidth, settings.VideoHeight, BasicPixelFormat.YUV420P))
+            settings.Video.Width = 1280;
+            settings.Video.Height = 720;
+            settings.Video.Timebase = new Rational(1, 60);
+            settings.Video.Bitrate = 5000000;
+            settings.Audio.SampleRate = 44100;
+            settings.Audio.SampleFormat = BasicSampleFormat.FLTP;
             using (var enc = new BasicEncoder(filename, settings))
+            using (var vFrame = new BasicVideoFrame(settings.Video.Width, settings.Video.Height, BasicPixelFormat.YUV420P))
+            using (var aFrame = new BasicAudioFrame(settings.Audio.FrameSize == 0 ? 10000 : settings.Audio.FrameSize, settings.Audio.SampleFormat, settings.Audio.ChannelLayout))
             {
-                byte* bufY = frame.GetBuffer(0);
-                byte* bufCb = frame.GetBuffer(1);
-                byte* bufCr = frame.GetBuffer(2);
-                int strideY = frame.GetStride(0);
-                int strideCb = frame.GetStride(1);
-                int strideCr = frame.GetStride(2);
+                byte* bufY = vFrame.GetBuffer(0);
+                byte* bufCb = vFrame.GetBuffer(1);
+                byte* bufCr = vFrame.GetBuffer(2);
+                int strideY = vFrame.GetStride(0);
+                int strideCb = vFrame.GetStride(1);
+                int strideCr = vFrame.GetStride(2);
+                float* bufA1 = (float*) aFrame.GetBuffer(0);
+                float* bufA2 = (float*) aFrame.GetBuffer(1);
 
-                for (int i = 0; i < 5 * settings.VideoTimebaseDen / settings.VideoTimebaseNum; i++)
+                float t = 0;
+                float tInc = (float) (2 * Math.PI * 110.0 / settings.Audio.SampleRate);
+                float tInc2 = tInc / settings.Audio.SampleRate;
+                int aSamples = 0;
+
+                for (int frameNumber = 0; frameNumber < 5 * settings.Video.Timebase.Den / settings.Video.Timebase.Num; frameNumber++)
                 {
-                    for (int y = 0; y < settings.VideoHeight; y++)
-                        for (int x = 0; x < settings.VideoWidth; x++)
-                            bufY[y * strideY + x] = (byte) (x + y + i * 3);
-                    for (int y = 0; y < settings.VideoHeight / 2; y++)
+                    for (int y = 0; y < settings.Video.Height; y++)
+                        for (int x = 0; x < settings.Video.Width; x++)
+                            bufY[y * strideY + x] = (byte) (x + y + frameNumber * 3);
+                    for (int y = 0; y < settings.Video.Height / 2; y++)
                     {
-                        for (int x = 0; x < settings.VideoWidth / 2; x++)
+                        for (int x = 0; x < settings.Video.Width / 2; x++)
                         {
-                            bufCb[y * strideCb + x] = (byte) (128 + y + i * 2);
-                            bufCr[y * strideCr + x] = (byte) (64 + x + i * 5);
+                            bufCb[y * strideCb + x] = (byte) (128 + y + frameNumber * 2);
+                            bufCr[y * strideCr + x] = (byte) (64 + x + frameNumber * 5);
                         }
                     }
-                    enc.EncodeFrame(frame, i);
+                    enc.EncodeFrame(vFrame, frameNumber);
+
+                    while (aSamples < frameNumber * settings.Audio.SampleRate * settings.Video.Timebase.Num / settings.Video.Timebase.Den)
+                    {
+                        for (int k = 0; k < aFrame.SampleCount; k++)
+                        {
+                            float sample = (float) Math.Sin(t) * 0.5f;
+                            bufA1[k] = sample;
+                            bufA2[k] = sample;
+                            t += tInc;
+                            tInc += tInc2;
+                        }
+                        enc.EncodeFrame(aFrame, aSamples);
+                        aSamples += aFrame.SampleCount;
+                    }
                 }
             }
         }

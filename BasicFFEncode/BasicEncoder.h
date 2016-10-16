@@ -25,5 +25,6 @@ namespace BasicFFEncode
         BasicEncoder(String^ filename, BasicEncoderSettings^ settings);
         ~BasicEncoder();
         void EncodeFrame(BasicVideoFrame^ frame, Int64 presentationTimestamp);
+        void EncodeFrame(BasicAudioFrame^ frame, Int64 presentationTimestamp);
     };
 }

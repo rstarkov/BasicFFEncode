@@ -6,6 +6,7 @@
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Frames.h" />
     <ClInclude Include="BasicEncoderSettings.h" />
+    <ClInclude Include="Enums.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />

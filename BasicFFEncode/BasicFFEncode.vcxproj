@@ -154,6 +154,7 @@
   <ItemGroup>
     <ClInclude Include="BasicEncoder.h" />
     <ClInclude Include="BasicEncoderSettings.h" />
+    <ClInclude Include="Enums.h" />
     <ClInclude Include="Frames.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Stdafx.h" />
