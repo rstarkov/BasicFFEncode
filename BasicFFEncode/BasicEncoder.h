@@ -27,4 +27,16 @@ namespace BasicFFEncode
         void EncodeFrame(BasicVideoFrame^ frame, Int64 presentationTimestamp);
         void EncodeFrame(BasicAudioFrame^ frame, Int64 presentationTimestamp);
     };
+
+    public ref class BasicRescaler
+    {
+    private:
+        SwsContext* _pContext;
+
+    public:
+        BasicRescaler(int srcWidth, int srcHeight, BasicPixelFormat srcFormat, int destWidth, int destHeight, BasicPixelFormat destFormat, BasicRescalerFlags flags);
+        BasicRescaler(BasicVideoFrame^ srcFrameTemplate, BasicVideoFrame^ destFrameTemplate, BasicRescalerFlags flags);
+        ~BasicRescaler();
+        void RescaleFrame(BasicVideoFrame^ src, BasicVideoFrame^ dest);
+    };
 }

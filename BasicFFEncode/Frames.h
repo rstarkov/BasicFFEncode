@@ -19,6 +19,9 @@ namespace BasicFFEncode
         ~BasicVideoFrame();
         Byte* GetBuffer(int plane);
         Int32 GetStride(int plane);
+        property Int32 Width { Int32 get() { return pFrame->width; }}
+        property Int32 Height { Int32 get() { return pFrame->height; }}
+        property BasicPixelFormat PixelFormat { BasicPixelFormat get() { return static_cast<BasicPixelFormat>(pFrame->format); }}
     };
 
     public ref class BasicAudioFrame
@@ -32,6 +35,7 @@ namespace BasicFFEncode
         Byte* GetBuffer(Int32 plane);
         Int32 GetStride(Int32 plane);
         property Int32 SampleCount { Int32 get() { return pFrame->nb_samples; }}
+        property BasicSampleFormat SampleFormat { BasicSampleFormat get() { return static_cast<BasicSampleFormat>(pFrame->format); }}
     };
 
 }

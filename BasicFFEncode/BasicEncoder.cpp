@@ -274,3 +274,25 @@ void BasicFFEncode::BasicEncoder::EncodeFrame(BasicAudioFrame^ frame, Int64 pres
     // The codec may have kept a reference to this frame, making it un-writable. Allocate new buffers in this case to ensure the caller can still write to this frame.
     av_frame_make_writable(frame->pFrame);
 }
+
+BasicFFEncode::BasicRescaler::BasicRescaler(int srcWidth, int srcHeight, BasicPixelFormat srcFormat, int destWidth, int destHeight, BasicPixelFormat destFormat, BasicRescalerFlags flags)
+{
+    _pContext = sws_getContext(srcWidth, srcHeight, static_cast<AVPixelFormat>(srcFormat), destWidth, destHeight, static_cast<AVPixelFormat>(destFormat), (int)flags, NULL, NULL, NULL);
+    if (!_pContext)
+        throw gcnew Exception("Could not create rescaler context.");
+}
+
+BasicFFEncode::BasicRescaler::BasicRescaler(BasicVideoFrame^ srcFrameTemplate, BasicVideoFrame^ destFrameTemplate, BasicRescalerFlags flags)
+    : BasicRescaler(srcFrameTemplate->Width, srcFrameTemplate->Height, srcFrameTemplate->PixelFormat, destFrameTemplate->Width, destFrameTemplate->Height, destFrameTemplate->PixelFormat, flags)
+{
+}
+
+BasicFFEncode::BasicRescaler::~BasicRescaler()
+{
+    sws_freeContext(_pContext);
+}
+
+void BasicFFEncode::BasicRescaler::RescaleFrame(BasicVideoFrame^ src, BasicVideoFrame^ dest)
+{
+    sws_scale(_pContext, (const uint8_t * const *)src->pFrame->data, src->pFrame->linesize, 0, src->Height, dest->pFrame->data, dest->pFrame->linesize);
+}

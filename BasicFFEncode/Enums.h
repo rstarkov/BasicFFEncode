@@ -3,6 +3,7 @@ extern "C"
 {
 #include <libavformat/avformat.h>
 #include <libavutil/channel_layout.h>
+#include <libswscale/swscale.h>
 }
 
 namespace BasicFFEncode
@@ -656,6 +657,30 @@ namespace BasicFFEncode
         WideRight = AV_CH_WIDE_RIGHT,
         SurroundDirectLeft = AV_CH_SURROUND_DIRECT_LEFT,
         SurroundDirectRight = AV_CH_SURROUND_DIRECT_RIGHT,
-        LowFrequency2 = AV_CH_LOW_FREQUENCY_2
+        LowFrequency2 = AV_CH_LOW_FREQUENCY_2,
+    };
+
+    [System::FlagsAttribute]
+    public enum class BasicRescalerFlags
+    {
+        FastBilinear = SWS_FAST_BILINEAR,
+        Bilinear = SWS_BILINEAR,
+        Bicubic = SWS_BICUBIC,
+        X = SWS_X,
+        Point = SWS_POINT,
+        Area = SWS_AREA,
+        BicubLin = SWS_BICUBLIN,
+        Gauss = SWS_GAUSS,
+        Sinc = SWS_SINC,
+        Lanczos = SWS_LANCZOS,
+        Spline = SWS_SPLINE,
+        SrcVChrDropMask = SWS_SRC_V_CHR_DROP_MASK,
+        PrintInfo = SWS_PRINT_INFO,
+        FullChrHInt = SWS_FULL_CHR_H_INT,
+        FullChrHInp = SWS_FULL_CHR_H_INP,
+        DirectBGR = SWS_DIRECT_BGR,
+        AccurateRnd = SWS_ACCURATE_RND,
+        BitExact = SWS_BITEXACT,
+        ErrorDiffusion = SWS_ERROR_DIFFUSION,
     };
 }
