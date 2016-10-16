@@ -1,12 +1,16 @@
-#pragma once
+#include "Stdafx.h"
 extern "C"
 {
 #include <libavformat/avformat.h>
 #include <libavutil/channel_layout.h>
 }
 
+
+
 namespace BasicFFEncode
 {
+    using namespace System;
+
     public enum class BasicSampleFormat
     {
         U8 = AV_SAMPLE_FMT_U8,          ///< unsigned 8 bits
@@ -629,8 +633,8 @@ namespace BasicFFEncode
         YLC = AV_CODEC_ID_YLC,
     };
 
-    [System::FlagsAttribute]
-    public enum class BasicChannelLayout : System::UInt64
+    [FlagsAttribute]
+    public enum class BasicChannelLayout : UInt64
     {
         FrontLeft = AV_CH_FRONT_LEFT,
         FrontRight = AV_CH_FRONT_RIGHT,

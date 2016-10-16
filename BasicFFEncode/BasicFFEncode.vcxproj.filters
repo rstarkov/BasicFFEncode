@@ -2,17 +2,14 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="Stdafx.h" />
-    <ClInclude Include="BasicEncoder.h" />
     <ClInclude Include="Helpers.h" />
-    <ClInclude Include="Frames.h" />
-    <ClInclude Include="BasicEncoderSettings.h" />
-    <ClInclude Include="Enums.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="Stdafx.cpp" />
     <ClCompile Include="BasicEncoder.cpp" />
     <ClCompile Include="Helpers.cpp" />
+    <ClCompile Include="Enums.cpp" />
     <ClCompile Include="Frames.cpp" />
     <ClCompile Include="BasicEncoderSettings.cpp" />
   </ItemGroup>

@@ -99,6 +99,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>..\FFmpeg\include</AdditionalIncludeDirectories>
+      <AdditionalUsingDirectories>$(IntDir)</AdditionalUsingDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies />
@@ -113,6 +114,7 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\FFmpeg\include</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalUsingDirectories>$(IntDir)</AdditionalUsingDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies />
@@ -126,6 +128,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>..\FFmpeg\include</AdditionalIncludeDirectories>
+      <AdditionalUsingDirectories>$(IntDir)</AdditionalUsingDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies />
@@ -139,6 +142,7 @@
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>..\FFmpeg\include</AdditionalIncludeDirectories>
+      <AdditionalUsingDirectories>$(IntDir)</AdditionalUsingDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies />
@@ -152,10 +156,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BasicEncoder.h" />
-    <ClInclude Include="BasicEncoderSettings.h" />
-    <ClInclude Include="Enums.h" />
-    <ClInclude Include="Frames.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Stdafx.h" />
   </ItemGroup>
@@ -163,6 +163,7 @@
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="BasicEncoder.cpp" />
     <ClCompile Include="BasicEncoderSettings.cpp" />
+    <ClCompile Include="Enums.cpp" />
     <ClCompile Include="Frames.cpp" />
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="Stdafx.cpp">

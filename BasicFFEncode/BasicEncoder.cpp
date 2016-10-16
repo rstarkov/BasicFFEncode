@@ -1,5 +1,5 @@
 // Parts of this code are derived from the muxing.c example for FFmpeg: https://raw.githubusercontent.com/FFmpeg/FFmpeg/master/doc/examples/muxing.c
-#include "stdafx.h"
+#include "Stdafx.h"
 
 extern "C"
 {
@@ -19,7 +19,14 @@ extern "C"
 #pragma comment(lib, "swscale.lib")
 #pragma comment(lib, "swresample.lib")
 
-#include "BasicEncoder.h"
+#include "Helpers.h"
+#using "Frames.obj"
+#using "Enums.obj"
+#using "BasicEncoderSettings.obj"
+
+using namespace System;
+using namespace System::Collections::Generic;
+using namespace System::Runtime::InteropServices;
 
 
 
@@ -54,6 +61,28 @@ public:
             avformat_free_context(pFormatContext); // this also frees pVideoStream/pAudioStream
     }
 };
+
+
+
+namespace BasicFFEncode
+{
+    public ref class BasicEncoder
+    {
+    private:
+        String^ _filename;
+        UnmanagedPrivates* _priv;
+
+    private:
+        static bool _initialised = false;
+        static void Initialise();
+
+    public:
+        BasicEncoder(String^ filename, BasicEncoderSettings^ settings);
+        ~BasicEncoder();
+        void EncodeFrame(BasicVideoFrame^ frame, Int64 presentationTimestamp);
+        void EncodeFrame(BasicAudioFrame^ frame, Int64 presentationTimestamp);
+    };
+}
 
 
 
