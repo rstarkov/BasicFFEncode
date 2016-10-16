@@ -20,7 +20,7 @@ extern "C"
 #pragma comment(lib, "swresample.lib")
 
 #include "BasicEncoder.h"
-
+#include "AVException.h"
 
 
 class UnmanagedPrivates
@@ -70,15 +70,15 @@ void addStream(AVCodecID codecId, AVFormatContext* formatContext, AVCodec** code
 {
     *codec = avcodec_find_encoder(codecId);
     if (!(*codec))
-        throw gcnew Exception("Could not find encoder."); // avcodec_get_name(codecId) for more info
+        throw gcnew AVException("Could not find specified encoder."); // avcodec_get_name(codecId) for more info
 
     *codecContext = avcodec_alloc_context3(*codec);
     if (!(*codecContext))
-        throw gcnew Exception("Could not create codec context.");
+        throw gcnew AVException("Could not create specified codec context.");
 
     *stream = avformat_new_stream(formatContext, NULL);
     if (!*stream)
-        throw gcnew Exception("Could not create stream.");
+        throw gcnew AVException("Could not create stream.");
 
     (*stream)->id = formatContext->nb_streams - 1;
 
@@ -93,9 +93,10 @@ void openCodec(AVCodec* codec, AVCodecContext* context, AVStream* stream, AVDict
     int result = avcodec_open2(context, codec, &optsCopy);
     av_dict_free(&optsCopy);
     if (result < 0)
-        throw gcnew Exception("Could not open codec");
-    if (avcodec_parameters_from_context(stream->codecpar, context) < 0)
-        throw gcnew Exception("Could not copy parameters from context");
+        throw gcnew AVException("Could not open codec", result);
+	result = avcodec_parameters_from_context(stream->codecpar, context);
+    if (result < 0)
+        throw gcnew AVException("Could not copy parameters from context", result);
 }
 
 BasicFFEncode::BasicEncoder::BasicEncoder(String^ filename, BasicEncoderSettings^ settings)
@@ -116,16 +117,17 @@ BasicFFEncode::BasicEncoder::BasicEncoder(String^ filename, BasicEncoderSettings
     try
     {
         // Allocate a media context, while attempting to deduce the format from the file name, defaulting to MPEG if automatic deduction failed
-        avformat_alloc_output_context2(&_priv->pFormatContext, NULL, NULL, _priv->pFilename);
+        int result = avformat_alloc_output_context2(&_priv->pFormatContext, NULL, NULL, _priv->pFilename);
         if (!_priv->pFormatContext)
-            avformat_alloc_output_context2(&_priv->pFormatContext, NULL, "mpeg", _priv->pFilename);
-        if (!_priv->pFormatContext)
-            throw gcnew Exception("Unable to allocate output context.");
+            result = avformat_alloc_output_context2(&_priv->pFormatContext, NULL, "mpeg", _priv->pFilename);
+        if (!_priv->pFormatContext || result < 0)
+            throw gcnew AVException("Unable to allocate output context.", result);
         AVCodecID videoCodecId = _priv->pFormatContext->oformat->video_codec;
         AVCodecID audioCodecId = _priv->pFormatContext->oformat->audio_codec;
 
         if (_priv->pFormatContext->oformat->flags & AVFMT_NOFILE)
-            throw gcnew Exception("Output format has AVFMT_NOFILE flag set.");
+            throw gcnew AVException("Selected output format has AVFMT_NOFILE flag set. " +
+				                    "Please choose another output by changing the file name extension");
 
 
         // Add the audio and video streams using the default format codecs and initialize the codecs.
@@ -203,12 +205,14 @@ BasicFFEncode::BasicEncoder::BasicEncoder(String^ filename, BasicEncoderSettings
 
 
         // Open the output file
-        if (avio_open(&_priv->pFormatContext->pb, _priv->pFilename, AVIO_FLAG_WRITE) < 0)
-            throw gcnew Exception("Unable to open the output file.");
+		result = avio_open(&_priv->pFormatContext->pb, _priv->pFilename, AVIO_FLAG_WRITE);
+        if (result < 0)
+            throw gcnew AVException("Unable to open the output file.", result);
 
         // Write the stream header
-        if (avformat_write_header(_priv->pFormatContext, &opts) < 0)
-            throw gcnew Exception("Unable to write stream header.");
+		result = avformat_write_header(_priv->pFormatContext, &opts);
+        if (result < 0)
+            throw gcnew AVException("Unable to write stream header.", result);
     }
     catch (Exception^)
     {
@@ -227,39 +231,54 @@ void writePendingPackets(AVCodecContext* context, AVStream* stream, AVFormatCont
     {
         av_packet_rescale_ts(&packet, context->time_base, stream->time_base);
         packet.stream_index = stream->index;
-        if (av_interleaved_write_frame(formatContext, &packet) < 0)
-            throw gcnew Exception("Could not write frame.");
+		int frame_result = av_interleaved_write_frame(formatContext, &packet);
+        if (frame_result < 0)
+            throw gcnew AVException("Could not write frame.", frame_result);
     }
     if (result != AVERROR(EAGAIN) && result != AVERROR_EOF)
-        throw gcnew Exception("Error while receiving encoded packet.");
+        throw gcnew AVException("Error while receiving encoded packet.", result);
 }
 
 BasicFFEncode::BasicEncoder::~BasicEncoder()
 {
-    if (_priv->pVideoContext)
-    {
-        if (avcodec_send_frame(_priv->pVideoContext, NULL) < 0)
-            throw gcnew Exception("Could not flush video encoder.");
-        writePendingPackets(_priv->pVideoContext, _priv->pVideoStream, _priv->pFormatContext);
-    }
-    if (_priv->pAudioContext)
-    {
-        if (avcodec_send_frame(_priv->pAudioContext, NULL) < 0)
-            throw gcnew Exception("Could not flush audio encoder.");
-        writePendingPackets(_priv->pAudioContext, _priv->pAudioStream, _priv->pFormatContext);
-    }
+	try 
+	{
+		int result;
+		if (_priv->pVideoContext)
+		{
+			result = avcodec_send_frame(_priv->pVideoContext, NULL);
+			if (result < 0)
+				throw gcnew AVException("Could not flush video encoder.", result);
+			writePendingPackets(_priv->pVideoContext, _priv->pVideoStream, _priv->pFormatContext);
+		}
+		if (_priv->pAudioContext)
+		{
+			result = avcodec_send_frame(_priv->pAudioContext, NULL);
+			if (result < 0)
+				throw gcnew AVException("Could not flush audio encoder.", result);
+			writePendingPackets(_priv->pAudioContext, _priv->pAudioStream, _priv->pFormatContext);
+		}
 
-    av_write_trailer(_priv->pFormatContext);
-    avio_closep(&_priv->pFormatContext->pb);
+		result = av_write_trailer(_priv->pFormatContext);
+		if (result < 0)
+			throw gcnew AVException("Could not write file trailer", result);
 
-    delete _priv;
+		result = avio_closep(&_priv->pFormatContext->pb);
+		if (result < 0)
+			throw gcnew AVException("Could not close file handle", result);
+	}
+	finally 
+	{
+		delete _priv;
+	}
 }
 
 void BasicFFEncode::BasicEncoder::EncodeFrame(BasicVideoFrame^ frame, Int64 presentationTimestamp)
 {
     frame->pFrame->pts = presentationTimestamp;
-    if (avcodec_send_frame(_priv->pVideoContext, frame->pFrame) < 0)
-        throw gcnew Exception("Could not encode video frame.");
+	int result = avcodec_send_frame(_priv->pVideoContext, frame->pFrame);
+    if (result < 0)
+        throw gcnew AVException("Could not encode video frame.", result);
     writePendingPackets(_priv->pVideoContext, _priv->pVideoStream, _priv->pFormatContext);
     // The codec may have kept a reference to this frame, making it un-writable. Allocate new buffers in this case to ensure the caller can still write to this frame.
     av_frame_make_writable(frame->pFrame);
@@ -268,8 +287,9 @@ void BasicFFEncode::BasicEncoder::EncodeFrame(BasicVideoFrame^ frame, Int64 pres
 void BasicFFEncode::BasicEncoder::EncodeFrame(BasicAudioFrame^ frame, Int64 presentationTimestamp)
 {
     frame->pFrame->pts = presentationTimestamp;
-    if (avcodec_send_frame(_priv->pAudioContext, frame->pFrame) < 0)
-        throw gcnew Exception("Could not encode audio frame.");
+	int result = avcodec_send_frame(_priv->pAudioContext, frame->pFrame);
+	if (result < 0)
+		throw gcnew AVException("Could not encode audio frame.", result);
     writePendingPackets(_priv->pAudioContext, _priv->pAudioStream, _priv->pFormatContext);
     // The codec may have kept a reference to this frame, making it un-writable. Allocate new buffers in this case to ensure the caller can still write to this frame.
     av_frame_make_writable(frame->pFrame);
@@ -279,7 +299,7 @@ BasicFFEncode::BasicRescaler::BasicRescaler(int srcWidth, int srcHeight, BasicPi
 {
     _pContext = sws_getContext(srcWidth, srcHeight, static_cast<AVPixelFormat>(srcFormat), destWidth, destHeight, static_cast<AVPixelFormat>(destFormat), (int)flags, NULL, NULL, NULL);
     if (!_pContext)
-        throw gcnew Exception("Could not create rescaler context.");
+        throw gcnew AVException("Could not create rescaler context.");
 }
 
 BasicFFEncode::BasicRescaler::BasicRescaler(BasicVideoFrame^ srcFrameTemplate, BasicVideoFrame^ destFrameTemplate, BasicRescalerFlags flags)

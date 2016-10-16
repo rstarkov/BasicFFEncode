@@ -152,6 +152,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AVException.h" />
     <ClInclude Include="BasicEncoder.h" />
     <ClInclude Include="BasicEncoderSettings.h" />
     <ClInclude Include="Enums.h" />
@@ -161,6 +162,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="AVException.cpp" />
     <ClCompile Include="BasicEncoder.cpp" />
     <ClCompile Include="BasicEncoderSettings.cpp" />
     <ClCompile Include="Frames.cpp" />

@@ -7,6 +7,7 @@
     <ClInclude Include="Frames.h" />
     <ClInclude Include="BasicEncoderSettings.h" />
     <ClInclude Include="Enums.h" />
+    <ClInclude Include="AVException.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
@@ -15,5 +16,6 @@
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="Frames.cpp" />
     <ClCompile Include="BasicEncoderSettings.cpp" />
+    <ClCompile Include="AVException.cpp" />
   </ItemGroup>
 </Project>
