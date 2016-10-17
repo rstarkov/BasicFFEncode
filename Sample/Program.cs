@@ -5,9 +5,15 @@ namespace Sample
 {
     class Program
     {
-        unsafe static void Main(string[] args)
+        static void Main(string[] args)
         {
-            ExampleRGB(args[0]);
+            if (args.Length < 1)
+            {
+                Console.WriteLine("Usage: Sample <output.mp4>");
+                return;
+            }
+            Threaded.ThreadedExample.Capture(args[0]);
+            //ExampleRGB(args[0]);
         }
 
         unsafe static void ExampleYUV(string filename)
