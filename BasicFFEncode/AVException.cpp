@@ -24,7 +24,7 @@ String^ ErrorMessageAndCodeToString(String^ message, int av_error)
 	String^ av_message = ErrorCodeToString(av_error);
 	return av_message == nullptr
 		? message
-		: message + " (" + av_message + ")";
+		: message + " (code " + av_error.ToString() + ": " + av_message + ")";
 }
 
 AVException::AVException() : Exception()

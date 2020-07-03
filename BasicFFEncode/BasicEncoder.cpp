@@ -88,12 +88,15 @@ void addStream(AVCodecID codecId, AVFormatContext* formatContext, AVCodec** code
 
 void openCodec(AVCodec* codec, AVCodecContext* context, AVStream* stream, AVDictionary* opts)
 {
+	const char* codecName = avcodec_get_name(codec->id);
+	String^ prettyName = gcnew String(codecName);
+	
 	AVDictionary* optsCopy = NULL;
 	av_dict_copy(&optsCopy, opts, 0);
 	int result = avcodec_open2(context, codec, &optsCopy);
 	av_dict_free(&optsCopy);
 	if (result < 0)
-		throw gcnew AVException("Could not open codec", result);
+		throw gcnew AVException("Could not open codec " + prettyName, result);
 	result = avcodec_parameters_from_context(stream->codecpar, context);
 	if (result < 0)
 		throw gcnew AVException("Could not copy parameters from context", result);
@@ -139,6 +142,10 @@ BasicFFEncode::BasicEncoder::BasicEncoder(String^ filename, BasicEncoderSettings
 		if (hasAudio)
 			addStream(audioCodecId, _priv->pFormatContext, &_priv->pAudioCodec, &_priv->pAudioStream, &_priv->pAudioContext);
 
+		// todo
+	/*	if (codecCtx->codec_id == AV_CODEC_ID_H264) {
+			av_opt_set(codecCtx->priv_data, "preset", "slow", 0);
+		}*/
 
 		if (hasVideo)
 		{
