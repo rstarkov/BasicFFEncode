@@ -114,7 +114,7 @@ namespace BasicFFEncode
         YUV444P10LE = AV_PIX_FMT_YUV444P10LE,///< planar YUV 4:4:4, 30bpp, (1 Cr & Cb sample per 1x1 Y samples), little-endian
         YUV422P9BE = AV_PIX_FMT_YUV422P9BE, ///< planar YUV 4:2:2, 18bpp, (1 Cr & Cb sample per 2x1 Y samples), big-endian
         YUV422P9LE = AV_PIX_FMT_YUV422P9LE, ///< planar YUV 4:2:2, 18bpp, (1 Cr & Cb sample per 2x1 Y samples), little-endian
-        VDA_VLD = AV_PIX_FMT_VDA_VLD,    ///< hardware decoding through VDA
+        //VDA_VLD = AV_PIX_FMT_VDA_VLD,    ///< hardware decoding through VDA
         GBRP = AV_PIX_FMT_GBRP,      ///< planar GBR 4:4:4 24bpp
         GBR24P = AV_PIX_FMT_GBR24P, // alias for #AV_PIX_FMT_GBRP
         GBRP9BE = AV_PIX_FMT_GBRP9BE,   ///< planar GBR 4:4:4 27bpp, big-endian
@@ -157,7 +157,7 @@ namespace BasicFFEncode
 
         YVYU422 = AV_PIX_FMT_YVYU422,   ///< packed YUV 4:2:2, 16bpp, Y0 Cr Y1 Cb
 
-        VDA = AV_PIX_FMT_VDA,          ///< HW acceleration through VDA, data[3] contains a CVPixelBufferRef
+        //VDA = AV_PIX_FMT_VDA,          ///< HW acceleration through VDA, data[3] contains a CVPixelBufferRef
 
         YA16BE = AV_PIX_FMT_YA16BE,       ///< 16 bits gray, 16 bits alpha (big-endian)
         YA16LE = AV_PIX_FMT_YA16LE,       ///< 16 bits gray, 16 bits alpha (little-endian)
